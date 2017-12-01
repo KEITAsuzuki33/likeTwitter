@@ -1,0 +1,98 @@
+% cat ~/.vimrc
+syntax on
+set clipboard=unnamedplus
+set nocp
+set number
+set nowrap
+set backspace=2
+set shiftwidth=4
+set ts=4
+set expandtab
+set list
+set hlsearch
+set showmatch
+set wildmenu
+set incsearch
+set ruler
+set cmdheight=2
+set title
+set showcmd
+set smartindent
+set softtabstop=4
+    colorscheme darkblue
+if &term =~ "xterm"
+    let &t_SI .= "\e[?2004h"
+    let &t_EI .= "\e[?2004l"
+    let &pastetoggle = "\e[201~"
+
+    function XTermPasteBegin(ret)
+         set paste
+         return a:ret
+    endfunction
+
+    inoremap <special> <expr> <Esc>[200~ XTermPasteBegin("")
+endif
+
+if has('mouse')
+    set mouse=a
+    if has('mouse_sgr')
+        set ttymouse=sgr
+    elseif v:version > 703 || v:version is 703 && has('patch632')
+        set ttymouse=sgr
+    else
+        set ttymouse=xterm2
+    endif
+endif
+
+nmap <S-tab> <S-,><S-,>
+map <C-i> <S-.><S-.>
+nmap <S-,><S-,> :tabprevious<cr>
+imap <S-,><S-,> <ESC>:tabprevious<cr>
+nmap <S-.><S-.> :tabn<CR>
+imap <C-t> <ESC>:tabe<CR>
+nmap <C-t> :tabe<CR>
+
+function! InsertTabWrapper()
+    let col = col('.') - 1
+    if !col || (getline('.')[col - 1] !~ '\k' && getline('.')[col - 1]  != '>' && getline('.')[col - 1]  != '$')
+        return "\<TAB>"
+    else
+        if pumvisible()
+            return "\<C-N>\<C-N>\<C-N>"
+        else
+            return "\<C-N>\<C-P>"
+        end
+    endif
+endfunction
+inoremap <tab> <c-r>=InsertTabWrapper()<cr>
+
+
+if has('vim_starting')
+    " 初回起動時のみruntimepathにNeoBundleのパスを指定する
+    set runtimepath+=~/.vim/bundle/neobundle.vim/
+
+    " NeoBundleが未インストールであればgit cloneする・・・・・・①
+    if !isdirectory(expand("~/.vim/bundle/neobundle.vim/"))
+        echo "install NeoBundle..."
+        :call system("git clone git://github.com/Shougo/neobundle.vim ~/.vim/bundle/neobundle.vim")
+    endif
+endif
+
+call neobundle#begin(expand('~/.vim/bundle/'))
+
+" インストールするVimプラグインを以下に記述
+" NeoBundle自身を管理
+NeoBundleFetch 'Shougo/neobundle.vim'
+"----------------------------------------------------------
+" ここに追加したいVimプラグインを記述する・・・・・・②
+NeoBundle 'bronson/vim-trailing-whitespace'
+
+
+"----------------------------------------------------------
+call neobundle#end()
+
+" ファイルタイプ別のVimプラグイン/インデントを有効にする
+filetype plugin indent on
+
+" 未インストールのVimプラグインがある場合、インストールするかどうかを尋ねてくれるようにする設定・・・・・・③
+NeoBundleCheck
